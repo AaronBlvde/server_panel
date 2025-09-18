@@ -86,16 +86,23 @@ def containers():
         flash("Нет прав для просмотра контейнеров", "danger")
         return redirect(url_for('main.dashboard'))
 
-    containers_raw = client.containers.list(all=True)
-    containers = []
-    for c in containers_raw:
-        containers.append({
+    containers_list = []
+    for c in client.containers.list(all=True):
+        c_dict = {
             "id": c.id,
             "name": c.name,
-            "status": c.status
-        })
+            "status": c.status,
+            "ports": []
+        }
 
-    return render_template('containers.html', containers=containers, roles=roles)
+        ports = c.attrs.get('NetworkSettings', {}).get('Ports') or {}
+        for container_port, mappings in ports.items():
+            if mappings:
+                c_dict['ports'].append(mappings[0]['HostPort'])
+
+        containers_list.append(c_dict)
+
+    return render_template('containers.html', containers=containers_list, roles=roles)
 
 @main.route('/containers/<container_id>/logs')
 @login_required
