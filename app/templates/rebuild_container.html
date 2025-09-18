@@ -1,0 +1,42 @@
+{% extends "layout.html" %}
+
+{% block title %}Пересборка контейнера{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h2 class="text-center mb-4">Пересборка контейнера: {{ container_name }}</h2>
+    <form method="POST">
+      <div class="mb-3">
+        <label for="folder_path" class="form-label">Путь к папке с Dockerfile</label>
+        <!-- Поле для ручного ввода пути -->
+        <input type="text" class="form-control mb-2" id="folder_path" name="folder_path"
+               placeholder="/путь/к/папке" value="{{ last_path }}" required>
+        <!-- Кнопка выбора папки через проводник -->
+        <input type="file" id="folder_picker" webkitdirectory directory multiple style="display:none;">
+        <button type="button" class="btn btn-outline-secondary" onclick="document.getElementById('folder_picker').click();">
+          Выбрать папку через проводник
+        </button>
+      </div>
+      <div class="d-grid mt-3">
+        <button type="submit" class="btn btn-danger">Пересобрать</button>
+      </div>
+    </form>
+    <a href="{{ url_for('main.containers') }}" class="btn btn-secondary mt-3">Назад к контейнерам</a>
+  </div>
+</div>
+
+<script>
+  const folderPicker = document.getElementById('folder_picker');
+  const folderPathInput = document.getElementById('folder_path');
+
+  folderPicker.addEventListener('change', (event) => {
+    if (event.target.files.length > 0) {
+      // Берём путь к первой выбранной папке
+      const fullPath = event.target.files[0].webkitRelativePath;
+      const folder = fullPath.split('/')[0]; // имя корневой папки
+      folderPathInput.value = folder; // ставим в текстовое поле
+    }
+  });
+</script>
+{% endblock %}

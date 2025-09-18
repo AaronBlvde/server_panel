@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block title %}Логи контейнера{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-10">
+      <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+          <h4 class="mb-0">Логи контейнера: {{ container.name }}</h4>
+        </div>
+        <div class="card-body p-0">
+          <div id="log-container" class="p-3"
+               style="height: 400px; overflow-y: auto; background-color:#1e1e1e; color:#e0e0e0; font-family: monospace;">
+            <!-- Логи будут загружены сюда -->
+          </div>
+        </div>
+        <div class="card-footer text-end">
+          <a href="{{ url_for('main.containers') }}" class="btn btn-secondary">Назад</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const logContainer = document.getElementById("log-container");
+const containerId = "{{ container.id }}";
+
+async function fetchLogs() {
+    try {
+        const response = await fetch(`/containers/${containerId}/logs_json`);
+        const data = await response.json();
+        if (!data.error) {
+            logContainer.textContent = data.logs;
+            logContainer.scrollTop = logContainer.scrollHeight; // автоскролл вниз
+        }
+    } catch (err) {
+        console.error("Ошибка при получении логов:", err);
+    }
+}
+
+// обновляем каждые 3 секунды
+setInterval(fetchLogs, 3000);
+fetchLogs();
+</script>
+{% endblock %}
