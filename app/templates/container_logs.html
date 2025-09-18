@@ -12,7 +12,7 @@
         </div>
         <div class="card-body p-0">
           <div id="log-container" class="p-3"
-               style="height: 400px; overflow-y: auto; background-color:#1e1e1e; color:#e0e0e0; font-family: monospace;">
+               style="height: 400px; overflow-y: auto; background-color:#1e1e1e; color:#e0e0e0; font-family: monospace; white-space: pre-wrap;">
             <!-- Логи будут загружены сюда -->
           </div>
         </div>
@@ -28,16 +28,30 @@
 const logContainer = document.getElementById("log-container");
 const containerId = "{{ container.id }}";
 
+function highlightLine(line) {
+    if (/ERROR/.test(line)) {
+        return `<span style="color:#ff4c4c;">${line}</span>`;
+    } else if (/WARN|WARNING/.test(line)) {
+        return `<span style="color:#ffa500;">${line}</span>`;
+    } else {
+        return line;
+    }
+}
+
 async function fetchLogs() {
     try {
         const response = await fetch(`/containers/${containerId}/logs_json`);
         const data = await response.json();
         if (!data.error) {
-            logContainer.textContent = data.logs;
+            const lines = data.logs.split('\n');
+            logContainer.innerHTML = lines.map(highlightLine).join('<br>');
             logContainer.scrollTop = logContainer.scrollHeight; // автоскролл вниз
+        } else {
+            logContainer.textContent = data.error;
         }
     } catch (err) {
         console.error("Ошибка при получении логов:", err);
+        logContainer.textContent = "Ошибка при получении логов";
     }
 }
 
