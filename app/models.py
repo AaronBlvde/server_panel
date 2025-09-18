@@ -22,11 +22,4 @@ class Role(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     view = db.Column(db.Boolean, default=True)        # может смотреть контейнеры и логи
     start_stop = db.Column(db.Boolean, default=False) # может запускать/останавливать контейнеры
-    rebuild = db.Column(db.Boolean, default=False)    # может пересобирать контейнеры
-
-
-# Новая модель для хранения пути к Dockerfile для каждого контейнера
-class ContainerConfig(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    container_name = db.Column(db.String(100), unique=True, nullable=False)
-    last_build_path = db.Column(db.String(500), nullable=True)
+    # rebuild удалено

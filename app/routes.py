@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, redirect, url_for, request, flash, jsonify
+from flask import Blueprint, render_template, redirect, url_for, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
-from .models import User, Role, ContainerConfig
+from .models import User, Role
 from . import db, login_manager
 from .forms import LoginForm, AddUserForm
 import docker
@@ -62,8 +62,7 @@ def add_user():
             roles = Role(
                 user_id=user.id,
                 view=form.view.data,
-                start_stop=form.start_stop.data,
-                rebuild=form.rebuild.data
+                start_stop=form.start_stop.data
             )
             db.session.add(roles)
             db.session.commit()
@@ -75,7 +74,7 @@ def add_user():
 def get_user_roles():
     if current_user.roles:
         return current_user.roles
-    return Role(view=False, start_stop=False, rebuild=False)
+    return Role(view=False, start_stop=False)
 
 # ----- CONTAINERS -----
 @main.route('/containers')
@@ -159,35 +158,3 @@ def container_stop(container_id):
     except Exception as e:
         flash(f"Ошибка при остановке: {e}", "danger")
     return redirect(url_for('main.containers'))
-
-# ----- REBUILD CONTAINER WITH PATH MEMORY -----
-@main.route('/containers/rebuild/<container_name>', methods=['GET', 'POST'])
-@login_required
-def rebuild_container(container_name):
-    roles = get_user_roles()
-    if not roles.rebuild:
-        flash("Нет прав для пересборки", "danger")
-        return redirect(url_for('main.containers'))
-
-    config = ContainerConfig.query.filter_by(container_name=container_name).first()
-    last_path = config.last_build_path if config else ""
-
-    if request.method == 'POST':
-        folder_path = request.form['folder_path']
-
-        if not config:
-            config = ContainerConfig(container_name=container_name, last_build_path=folder_path)
-            db.session.add(config)
-        else:
-            config.last_build_path = folder_path
-        db.session.commit()
-
-        try:
-            client.images.build(path=folder_path, tag=container_name)
-            flash(f"Контейнер {container_name} пересобран", "success")
-        except Exception as e:
-            flash(f"Ошибка при пересборке: {e}", "danger")
-
-        return redirect(url_for('main.containers'))
-
-    return render_template('rebuild_container.html', container_name=container_name, last_path=last_path)
