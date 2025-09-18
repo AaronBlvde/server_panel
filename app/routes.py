@@ -88,19 +88,22 @@ def containers():
 
     containers_list = []
     for c in client.containers.list(all=True):
-        c_dict = {
+        # Сбор информации о портах
+        ports = []
+        for mappings in (c.attrs.get('NetworkSettings', {}).get('Ports') or {}).values():
+            if mappings:
+                ports.append(mappings[0]['HostPort'])
+
+        # Сбор информации о хостовых путях (Source)
+        host_paths = [m.get("Source") for m in c.attrs.get('Mounts', [])]
+
+        containers_list.append({
             "id": c.id,
             "name": c.name,
             "status": c.status,
-            "ports": []
-        }
-
-        ports = c.attrs.get('NetworkSettings', {}).get('Ports') or {}
-        for container_port, mappings in ports.items():
-            if mappings:
-                c_dict['ports'].append(mappings[0]['HostPort'])
-
-        containers_list.append(c_dict)
+            "ports": ports,
+            "host_paths": host_paths
+        })
 
     return render_template('containers.html', containers=containers_list, roles=roles)
 
