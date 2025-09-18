@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: panel
     ports:
-      - "5431:5431"
+      - "5431:5432"   # внешний порт 5431, внутри контейнера 5432
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -16,16 +16,16 @@ services:
     build: .
     command: flask run --host=0.0.0.0 --port=5000 --reload
     ports:
-      - "5006:5006"
+      - "5006:5000"   # внешний 5006, внутри 5000
     environment:
       FLASK_APP: app
-      FLASK_ENV: development   # включает debug и reload
+      FLASK_ENV: development
       DATABASE_URL: postgresql://postgres:postgres@db:5432/panel
       SECRET_KEY: supersecretkey
     depends_on:
       - db
     volumes:
-      - .:/app                  # монтируем код для горячей перезагрузки
+      - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
